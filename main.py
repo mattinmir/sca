@@ -1,7 +1,13 @@
-# coding=utf-8
+
 from lookup_tables import *
 import numpy as np
 import matplotlib.pyplot as plt
+from pretty_print_weights import *
+
+
+########################################################################################################################
+#                                            Reading in Data
+########################################################################################################################
 
 
 dir = '/home/cwuser/chipwhisperer/projects/tmp/default_data/traces/'
@@ -48,9 +54,9 @@ power_traces = np.load(dir+'2016.07.25-10.56.46_traces.npy')
 num_power_traces = np.shape(power_traces)[0]
 num_trace_readings = np.shape(power_traces)[1]
 
-
-print num_power_traces
-print num_trace_readings
+#
+# print(num_power_traces)
+# print (num_trace_readings)
 
 # 16 subkeys, 256 key guesses, num_power_traces inputs for each subkey
 
@@ -69,12 +75,66 @@ print num_trace_readings
 #          v          | 0xF4                         |    2 |    4 | ... |    6 |
 #                     +------------------------------+------+------+-----+------+
 #                                                    <------256 Key guesses----->
-dimensions = (16, 256, num_power_traces)
-hamming_weights =  np.zeros(dimensions)
 
+########################################################################################################################
+#                                            Generating Hamming Weights
+########################################################################################################################
+
+
+dimensions = (16, 256, num_power_traces)
+hamming_weights = np.zeros(dimensions, dtype=np.int)
 
 for subkey in range(16):
     for keyguess in range(256):
         for trace in range(num_power_traces):
-            encrypted = SBOX[textin[trace] ^ keyguess]
+            encrypted = SBOX[textin[trace][subkey] ^ keyguess]
             hamming_weights[subkey][keyguess][trace] = HW[encrypted]
+
+# pretty_print_weights(0, num_power_traces, textin, hamming_weights)
+
+
+########################################################################################################################
+#                                            Performing Correlation
+########################################################################################################################
+
+# For each subkey, correlation is given by:
+#
+# Original: https://wiki.newae.com/images/math/4/3/e/43ec93b3925401eb381eff776aef625e.png
+# Mine: http://imgur.com/IfAuAz6
+# Latex Code:  Correlation_{keyguess, time} =\frac{\sum_{traces}[(weight_{trace,keyguess} - \overline{weight_{keyguess}}) (power_{trace,time} - \overline{power_{time}})]}{\sqrt{\sum_{traces}(weight_{trace,keyguess} - \overline{weight_{keyguess}})^{2}\cdot \sum_{traces}(power_{trace,time} - \overline{power_{time}})^{2}}}
+
+# One mean for each keyguess for each subkey over all traces
+mean_weights = np.zeros((16, 256))
+
+# One mean for each point in time
+mean_powers = np.zeros(num_trace_readings)
+
+for subkey in range(16):
+    for keyguess in range(256):
+        mean_weights[subkey][keyguess] = np.mean(hamming_weights[subkey][keyguess])
+
+sum_power = 0.0
+for time in range(num_trace_readings):
+    for trace in range(num_power_traces):
+        sum_power += power_traces[trace][time]
+    mean_powers[time] = sum_power/num_power_traces
+
+correlation_matrix = np.zeros((16, 256, num_trace_readings))
+for subkey in range(16):
+    for keyguess in range(256):
+        for time in range(num_trace_readings):
+            numerator = 0
+            denominator1 = 0
+            denominator2 = 0
+            for trace in range(num_power_traces):
+                numerator += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) * (power_traces[trace][time] - mean_powers[time])
+
+                denominator1 += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) ** 2
+                denominator2 += (power_traces[trace][time] - mean_powers[time]) ** 2
+
+            denominator = np.sqrt(denominator1 * denominator2)
+            correlation_matrix[subkey][keyguess][time] = numerator/denominator
+
+print correlation_matrix
+
+pass
