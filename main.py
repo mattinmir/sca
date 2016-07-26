@@ -120,7 +120,7 @@ for time in range(num_trace_readings):
     mean_powers[time] = sum_power/num_power_traces
 
 correlation_matrix = np.zeros((16, 256, num_trace_readings))
-for subkey in range(16):
+for subkey in range(1):
     for keyguess in range(256):
         for time in range(num_trace_readings):
             numerator = 0
