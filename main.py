@@ -1,9 +1,7 @@
-
 from lookup_tables import *
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from pretty_print_weights import *
-
 
 ########################################################################################################################
 #                                            Reading in Data
@@ -13,10 +11,10 @@ from pretty_print_weights import *
 dir = '/home/cwuser/chipwhisperer/projects/tmp/default_data/traces/'
 
 # A list of lists of 16 (random) input data bytes that were sent into the device to be encrypted
-textin = np.load(dir+'2016.07.25-10.56.46_textin.npy')
+textin = np.load(dir + '2016.07.25-10.56.46_textin.npy')
 
 # Traces of power usage for the duration the corresponding input data was being encrypted on the device
-power_traces = np.load(dir+'2016.07.25-10.56.46_traces.npy')
+power_traces = np.load(dir + '2016.07.25-10.56.46_traces.npy')
 
 # As a simplification, AES XORs the input with the private key one byte at a time, then substitutes the result for
 # a new value via a lookup table (SBOX)
@@ -48,8 +46,8 @@ power_traces = np.load(dir+'2016.07.25-10.56.46_traces.npy')
 # N is typically < 2^7 -> max 2^19 + time for correlation
 # vs brute forcing AES = 2^128 combinations = 3.4*10^38
 
-#plt.plot(power_traces[0])
-#plt.show()
+# plt.plot(power_traces[0])
+# plt.show()
 
 num_power_traces = np.shape(power_traces)[0]
 num_trace_readings = np.shape(power_traces)[1]
@@ -90,7 +88,7 @@ for subkey in range(16):
             encrypted = SBOX[textin[trace][subkey] ^ keyguess]
             hamming_weights[subkey][keyguess][trace] = HW[encrypted]
 
-# pretty_print_weights(0, num_power_traces, textin, hamming_weights)
+pretty_print_weights(0, num_power_traces, textin, hamming_weights)
 
 
 ########################################################################################################################
@@ -117,7 +115,7 @@ sum_power = 0.0
 for time in range(num_trace_readings):
     for trace in range(num_power_traces):
         sum_power += power_traces[trace][time]
-    mean_powers[time] = sum_power/num_power_traces
+    mean_powers[time] = sum_power / num_power_traces
 
 correlation_matrix = np.zeros((16, 256, num_trace_readings))
 for subkey in range(1):
@@ -127,14 +125,15 @@ for subkey in range(1):
             denominator1 = 0
             denominator2 = 0
             for trace in range(num_power_traces):
-                numerator += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) * (power_traces[trace][time] - mean_powers[time])
+                numerator += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) * (
+                power_traces[trace][time] - mean_powers[time])
 
                 denominator1 += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) ** 2
                 denominator2 += (power_traces[trace][time] - mean_powers[time]) ** 2
 
             denominator = np.sqrt(denominator1 * denominator2)
-            correlation_matrix[subkey][keyguess][time] = numerator/denominator
+            correlation_matrix[subkey][keyguess][time] = numerator / denominator
 
-print correlation_matrix
+print (correlation_matrix)
 
 pass
