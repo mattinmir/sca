@@ -1,0 +1,153 @@
+Iteration 1:
+	 Main: 20.5643727779 seconds
+	 Official: 22.2794778347 seconds
+Iteration 2:
+	 Main: 21.0498600006 seconds
+	 Official: 24.7437620163 seconds
+Iteration 3:
+	 Main: 27.5529289246 seconds
+	 Official: 25.0453081131 seconds
+Iteration 4:
+	 Main: 22.1931838989 seconds
+	 Official: 24.7295320034 seconds
+Iteration 5:
+	 Main: 24.2800118923 seconds
+	 Official: 27.9394600391 seconds
+Iteration 6:
+	 Main: 24.7706620693 seconds
+	 Official: 30.8760831356 seconds
+Iteration 7:
+	 Main: 23.5034849644 seconds
+	 Official: 30.5563340187 seconds
+Iteration 8:
+	 Main: 27.1679069996 seconds
+	 Official: 28.2512378693 seconds
+Iteration 9:
+	 Main: 23.6283791065 seconds
+	 Official: 26.206209898 seconds
+Iteration 10:
+	 Main: 23.7562470436 seconds
+	 Official: 26.9570538998 seconds
+Iteration 11:
+	 Main: 27.1260001659 seconds
+	 Official: 29.5931441784 seconds
+Iteration 12:
+	 Main: 26.2992060184 seconds
+	 Official: 27.7324309349 seconds
+Iteration 13:
+	 Main: 25.9149580002 seconds
+	 Official: 29.4510698318 seconds
+Iteration 14:
+	 Main: 25.2470600605 seconds
+	 Official: 28.9287278652 seconds
+Iteration 15:
+	 Main: 22.6929039955 seconds
+	 Official: 24.9329512119 seconds
+Iteration 16:
+	 Main: 23.146073103 seconds
+	 Official: 26.2373530865 seconds
+Iteration 17:
+	 Main: 24.4590039253 seconds
+	 Official: 28.7052659988 seconds
+Iteration 18:
+	 Main: 30.0066869259 seconds
+	 Official: 25.5980088711 seconds
+Iteration 19:
+	 Main: 22.0386190414 seconds
+	 Official: 24.6810359955 seconds
+Iteration 20:
+	 Main: 22.5571939945 seconds
+	 Official: 23.909924984 seconds
+Iteration 21:
+	 Main: 22.290156126 seconds
+	 Official: 25.1410868168 seconds
+Iteration 22:
+	 Main: 22.6434030533 seconds
+	 Official: 24.2946641445 seconds
+Iteration 23:
+	 Main: 22.4525711536 seconds
+	 Official: 26.4083580971 seconds
+Iteration 24:
+	 Main: 22.7000398636 seconds
+	 Official: 23.8124120235 seconds
+Iteration 25:
+	 Main: 22.6027131081 seconds
+	 Official: 25.3754138947 seconds
+Iteration 26:
+	 Main: 22.9498810768 seconds
+	 Official: 24.8626730442 seconds
+Iteration 27:
+	 Main: 21.8282628059 seconds
+	 Official: 24.6980948448 seconds
+Iteration 28:
+	 Main: 23.0651161671 seconds
+	 Official: 24.2601540089 seconds
+Iteration 29:
+	 Main: 22.6130800247 seconds
+	 Official: 25.5251970291 seconds
+Iteration 30:
+	 Main: 23.0679168701 seconds
+	 Official: 25.0383839607 seconds
+Iteration 31:
+	 Main: 22.2346169949 seconds
+	 Official: 24.9061691761 seconds
+Iteration 32:
+	 Main: 23.372191906 seconds
+	 Official: 25.0897209644 seconds
+Iteration 33:
+	 Main: 22.8382489681 seconds
+	 Official: 27.6348090172 seconds
+Iteration 34:
+	 Main: 21.168751955 seconds
+	 Official: 25.0221371651 seconds
+Iteration 35:
+	 Main: 22.4751121998 seconds
+	 Official: 26.1408829689 seconds
+Iteration 36:
+	 Main: 23.6868920326 seconds
+	 Official: 23.9687130451 seconds
+Iteration 37:
+	 Main: 21.0801348686 seconds
+	 Official: 23.0000760555 seconds
+Iteration 38:
+	 Main: 21.0015039444 seconds
+	 Official: 23.3184928894 seconds
+Iteration 39:
+	 Main: 21.2418739796 seconds
+	 Official: 23.2895770073 seconds
+Iteration 40:
+	 Main: 21.4591989517 seconds
+	 Official: 23.7253708839 seconds
+Iteration 41:
+	 Main: 21.2449560165 seconds
+	 Official: 23.1590189934 seconds
+Iteration 42:
+	 Main: 21.4194509983 seconds
+	 Official: 24.8575539589 seconds
+Iteration 43:
+	 Main: 22.1843562126 seconds
+	 Official: 23.2492659092 seconds
+Iteration 44:
+	 Main: 21.1444067955 seconds
+	 Official: 24.1765561104 seconds
+Iteration 45:
+	 Main: 21.1485230923 seconds
+	 Official: 23.4978101254 seconds
+Iteration 46:
+	 Main: 21.5080289841 seconds
+	 Official: 23.6622149944 seconds
+Iteration 47:
+	 Main: 21.2792971134 seconds
+	 Official: 23.6234481335 seconds
+Iteration 48:
+	 Main: 21.0679979324 seconds
+	 Official: 23.0825769901 seconds
+Iteration 49:
+	 Main: 22.0348021984 seconds
+	 Official: 23.2550368309 seconds
+Iteration 50:
+	 Main: 21.42704916 seconds
+	 Official: 23.0627059937 seconds
+Average over 50 iterations:
+	 Main: 22.9837055492 seconds
+	 Official: 25.3698589373 seconds

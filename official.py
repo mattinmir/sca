@@ -1,3 +1,5 @@
+# Official ChipWhisperer Analyser Implementation, with some variable names changed to help me compare it to my code
+
 def official(do_print):
     import numpy as np
 
@@ -46,8 +48,10 @@ def official(do_print):
         cpaoutput = [0] * 256
         maxcpa = [0] * 256
         for keyguess in range(0, 256):
-            #print "Subkey %2d, hyp = %02x: " % (subkey, keyguess),
-            #out.write("Subkey %2d, hyp = %02x: " % (subkey, keyguess))
+            if do_print:
+                print "Subkey %2d, hyp = %02x: " % (subkey, keyguess),
+                out.write("Subkey %2d, hyp = %02x: " % (subkey, keyguess))
+
             # Initialize arrays & variables to zero
             sumnum = np.zeros(num_trace_readings)
             sumden1 = np.zeros(num_trace_readings)
@@ -75,14 +79,15 @@ def official(do_print):
             cpaoutput[keyguess] = sumnum / np.sqrt(sumden1 * sumden2)
             maxcpa[keyguess] = max(abs(cpaoutput[keyguess]))
 
-            #print maxcpa[keyguess]
-            #out.write(str(maxcpa[keyguess]) + '\n')
+            if do_print:
+                print maxcpa[keyguess]
+                out.write(str(maxcpa[keyguess]) + '\n')
 
         # Find maximum value of key
         bestguess[subkey] = np.argmax(maxcpa)
-        #cparefs = np.argsort(maxcpa)[::-1]
 
-        #pge[subkey] = list(cparefs).index(correct_key[subkey])
+        cparefs = np.argsort(maxcpa)[::-1]
+        pge[subkey] = list(cparefs).index(correct_key[subkey])
 
     if do_print:
         print "Best Key Guess: "
@@ -95,9 +100,9 @@ def official(do_print):
         for s in correct_key:
             print "%02x " % s,
 
-        '''
-        "print ""
         print "PGE: ",
         for b in pge:
             print "%02d "%b,
-        '''
+
+if __name__ == '__main__':
+    official(do_print=True)

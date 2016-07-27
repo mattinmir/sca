@@ -1,9 +1,10 @@
+# My ChipWhisperer Analyser Implementation
+
 from __future__ import print_function
 
 def main(do_print):
     import lookup_tables as lt
     import numpy as np
-    # import matplotlib.pyplot as plt
     # from pretty_print_weights import *
 
     ########################################################################################################################
@@ -50,20 +51,14 @@ def main(do_print):
     # N is typically < 2^7 -> max 2^19 + time for correlation
     # vs brute forcing AES = 2^128 combinations = 3.4*10^38
 
-    # plt.plot(power_traces[0])
-    # plt.show()
-
-    num_power_traces = np.shape(power_traces)[0]-1
+    # I don't know why we subtract 1 here, it seems to me that it is discarding the last trace, but the official
+    # implementation does it and doesn't explain why
+    num_power_traces = np.shape(power_traces)[0] - 1
     num_trace_readings = np.shape(power_traces)[1]
 
-    #
-    # print(num_power_traces)
-    # print (num_trace_readings)
+    # 16 subkeys, 256 key guesses, `num_power_traces` inputs for each subkey
 
-    # 16 subkeys, 256 key guesses, num_power_traces inputs for each subkey
-
-
-    #               \
+    #                \
     #              16 tables
     #                  \
     #                   +--------------------------------------------------------+
@@ -82,7 +77,6 @@ def main(do_print):
     #                                            Generating Hamming Weights
     ########################################################################################################################
 
-
     dimensions = (16, 256, num_power_traces)
     hamming_weights = np.zeros(dimensions, dtype=np.int)
 
@@ -92,22 +86,28 @@ def main(do_print):
                 encrypted = lt.SBOX[textin[trace][subkey] ^ keyguess]
                 hamming_weights[subkey][keyguess][trace] = lt.HW[encrypted]
 
-    #pretty_print_weights(0, num_power_traces, textin, hamming_weights)
-
+    # input_byte = 0
+    # pretty_print_weights(input_byte, num_power_traces, textin, hamming_weights)
 
     ########################################################################################################################
     #                                            Performing Correlation
     ########################################################################################################################
 
-    # For each subkey, correlation is given by:
+    # For each subkey, correlation is given by the following equation (I redid it myself to make more sense):
     #
     # Original: https://wiki.newae.com/images/math/4/3/e/43ec93b3925401eb381eff776aef625e.png
     # Mine: http://imgur.com/IfAuAz6
-    # Latex Code:  Correlation_{keyguess, time} =\frac{\sum_{traces}[(weight_{trace,keyguess} - \overline{weight_{keyguess}}) (power_{trace,time} - \overline{power_{time}})]}{\sqrt{\sum_{traces}(weight_{trace,keyguess} - \overline{weight_{keyguess}})^{2}\cdot \sum_{traces}(power_{trace,time} - \overline{power_{time}})^{2}}}
-    # This equation is only for ONE subkey, so needs to be repeated 16 times
+    # Latex Code:
+    #
+    # Correlation_{keyguess, time} =\frac{\sum_{traces}[(weight_{trace,keyguess} -
+    # \overline{weight_{keyguess}}) (power_{trace,time} -
+    # \overline{power_{time}})]}{\sqrt{\sum_{traces}(weight_{trace,keyguess} -
+    # \overline{weight_{keyguess}})^{2}\cdot \sum_{traces}(power_{trace,time} - \overline{power_{time}})^{2}}}
+    #
+    # This equation is only for ONE subkey, so the calculation needs to be repeated 16 times
 
-
-
+    ######## How np.mean() works ########
+    #
     # power_traces[trace][time]
     #
     #          time0  time1  time2  ...
@@ -115,10 +115,9 @@ def main(do_print):
     # trace 1 ------|------|------|-->
     # trace 2 ------|------|------|-->#
     #
-    # np.mean (axis=None) flattens array and computes mean
-    # np.mean (axis=0) returns average for each time over all traces
-    # np.mean (axis=1) returns average for each trace over all times
-
+    # np.mean (power_traces, axis=None) flattens array and returns mean
+    # np.mean (power_traces, axis=0) returns mean for each time over all traces
+    # np.mean (power_traces, axis=1) returns mean for each trace over all times
 
     # One mean for each keyguess for each subkey over all traces
     mean_weights = np.mean(hamming_weights, axis=2, dtype=np.float64)
@@ -126,21 +125,27 @@ def main(do_print):
     # One mean for each point in time over all traces
     mean_powers = np.mean(power_traces, axis=0, dtype=np.float64)
 
-
+    # The correlation coefficients for each subkey to each keyguess at each point in time
     correlation_matrix = np.zeros((16, 256, num_trace_readings))
+
+    # To store the value of the correlation coefficient at the time it was highest for each subkey/keyguess
     highest_coefficient = np.zeros((16, 256))
-    full_key = [0] * 16 # np.zeros(16, dtype=np.int64)
+
+    # To store our best guess of the full key
+    full_key = [0] * 16
 
     out = open('main.out', 'w')
 
     for subkey in range(16):
         for keyguess in range(256):
-            #out.write("Subkey %2d, hyp = %02x: " % (subkey, keyguess))
 
-            numerators = np.zeros(num_trace_readings)
-            denominator1s = np.zeros(num_trace_readings) # All same value, maybe use single point var?
-            denominator2s = np.zeros(num_trace_readings)
+            # Variables to hold the three sums in the equation
+            numerators = np.zeros(num_trace_readings, dtype=np.float64)
+            denominator1s = 0.0  # Independent of trace, so just use an int
+            denominator2s = np.zeros(num_trace_readings, dtype=np.float64)
+
             for trace in range(num_power_traces):
+
                 # weight_diff is the (weight_{trace,keyguess} - \overline{weight_{keyguess}}) term in the equation
                 # Since it is independent of time, it is just a single value for the whole trace
                 weight_diff = hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]
@@ -163,12 +168,13 @@ def main(do_print):
 
             # For each keyguess, record its correlation coefficient at the time at which it was most correlated
             # It doesn't matter that this mixes up the time data because there should only be one keyguess at one point in
-            # time that has a high coefficent for the subkey
+            # time that has a high coefficient for the subkey
             highest_coefficient[subkey][keyguess] = max(abs(correlation_matrix[subkey][keyguess]))
-            out.write(str(highest_coefficient[subkey][keyguess]) + "\n")
+
         # Return the index of the largest value in highest_coefficient, which corresponds to the subkey value
         full_key[subkey] = np.asscalar(np.argmax(highest_coefficient[subkey]))
-        #print ("Got key byte", str(subkey) + ":", hex(full_key[subkey]))
+        if do_print:
+            print ("Got key byte", str(subkey) + ":", hex(full_key[subkey]))
 
     if do_print:
         print("Best Key Guess: ")
@@ -183,3 +189,5 @@ def main(do_print):
         print (''.join('%02x ' % subkey for subkey in correct_key))
 
 
+if __name__ == '__main__':
+    main(do_print=True)
