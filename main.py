@@ -88,7 +88,7 @@ for subkey in range(16):
             encrypted = SBOX[textin[trace][subkey] ^ keyguess]
             hamming_weights[subkey][keyguess][trace] = HW[encrypted]
 
-pretty_print_weights(0, num_power_traces, textin, hamming_weights)
+#pretty_print_weights(0, num_power_traces, textin, hamming_weights)
 
 
 ########################################################################################################################
@@ -101,38 +101,58 @@ pretty_print_weights(0, num_power_traces, textin, hamming_weights)
 # Mine: http://imgur.com/IfAuAz6
 # Latex Code:  Correlation_{keyguess, time} =\frac{\sum_{traces}[(weight_{trace,keyguess} - \overline{weight_{keyguess}}) (power_{trace,time} - \overline{power_{time}})]}{\sqrt{\sum_{traces}(weight_{trace,keyguess} - \overline{weight_{keyguess}})^{2}\cdot \sum_{traces}(power_{trace,time} - \overline{power_{time}})^{2}}}
 
+
+
+# power_traces[trace][time]
+#
+#          time0  time1  time2  ...
+# trace 0 ------|------|------|-->
+# trace 1 ------|------|------|-->
+# trace 2 ------|------|------|-->#
+#
+# np.mean (axis=None) flattens array and computes mean
+# np.mean (axis=0) returns average for each time over all traces
+# np.mean (axis=1) returns average for each trace over all times
+
+
 # One mean for each keyguess for each subkey over all traces
-mean_weights = np.zeros((16, 256))
+mean_weights = np.mean(hamming_weights, axis=2, dtype=np.float64)
 
-# One mean for each point in time
-mean_powers = np.zeros(num_trace_readings)
+# One mean for each point in time over all traces
+mean_powers = np.mean(power_traces, axis=0, dtype=np.float64)
 
-for subkey in range(16):
-    for keyguess in range(256):
-        mean_weights[subkey][keyguess] = np.mean(hamming_weights[subkey][keyguess])
-
-sum_power = 0.0
-for time in range(num_trace_readings):
-    for trace in range(num_power_traces):
-        sum_power += power_traces[trace][time]
-    mean_powers[time] = sum_power / num_power_traces
 
 correlation_matrix = np.zeros((16, 256, num_trace_readings))
 for subkey in range(1):
     for keyguess in range(256):
-        for time in range(num_trace_readings):
-            numerator = 0
-            denominator1 = 0
-            denominator2 = 0
-            for trace in range(num_power_traces):
-                numerator += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) * (
-                power_traces[trace][time] - mean_powers[time])
+        #for time in range(num_trace_readings):
+        numerators = np.zeros(num_trace_readings)
+        denominator1s = np.zeros(num_trace_readings) # All same value, maybe use single point var?
+        denominator2s = np.zeros(num_trace_readings)
+        for trace in range(num_power_traces):
+            # weight_diff is the (weight_{trace,keyguess} - \overline{weight_{keyguess}}) term in the equation
+            # Since it is independent of time, it is just a single value for the whole trace
+            weight_diff = hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]
 
-                denominator1 += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) ** 2
-                denominator2 += (power_traces[trace][time] - mean_powers[time]) ** 2
+            # power_diff is the (power_{trace,time} - \overline{power_{time}}) term in the equation
+            # Since is is time-dependent, it is an array of size num_power_traces, one value for each time in each trace
+            power_diff_array = power_traces[trace] - mean_powers
 
-            denominator = np.sqrt(denominator1 * denominator2)
-            correlation_matrix[subkey][keyguess][time] = numerator / denominator
+            # Building a list of each time point's numerator for this subkey/keyguess
+            numerators += weight_diff * power_diff_array
+
+            # Multiplying by itself is faster than using power function
+            denominator1s += weight_diff * weight_diff
+            denominator2s += power_diff_array * power_diff_array
+            #numerator += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) * (
+           # power_traces[trace][time] - mean_powers[time])
+
+            #denominator1s += (hamming_weights[subkey][keyguess][trace] - mean_weights[subkey][keyguess]) ** 2
+            #denominator2s += (power_traces[trace][time] - mean_powers[time]) ** 2
+
+        denominators = np.sqrt(denominator1s * denominator2s)
+        x=numerators/denominators
+        correlation_matrix[subkey][keyguess] = numerators / denominators
 
 print (correlation_matrix)
 
