@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from lookup_tables import *
 import numpy as np
 # import matplotlib.pyplot as plt
@@ -100,6 +102,7 @@ for subkey in range(16):
 # Original: https://wiki.newae.com/images/math/4/3/e/43ec93b3925401eb381eff776aef625e.png
 # Mine: http://imgur.com/IfAuAz6
 # Latex Code:  Correlation_{keyguess, time} =\frac{\sum_{traces}[(weight_{trace,keyguess} - \overline{weight_{keyguess}}) (power_{trace,time} - \overline{power_{time}})]}{\sqrt{\sum_{traces}(weight_{trace,keyguess} - \overline{weight_{keyguess}})^{2}\cdot \sum_{traces}(power_{trace,time} - \overline{power_{time}})^{2}}}
+# This equation is only for ONE subkey, so needs to be repeated 16 times
 
 
 
@@ -123,7 +126,10 @@ mean_powers = np.mean(power_traces, axis=0, dtype=np.float64)
 
 
 correlation_matrix = np.zeros((16, 256, num_trace_readings))
-for subkey in range(1):
+highest_coefficient = np.zeros((16, 256))
+full_key = [0] * 16 # np.zeros(16, dtype=np.int64)
+
+for subkey in range(16):
     for keyguess in range(256):
         #for time in range(num_trace_readings):
         numerators = np.zeros(num_trace_readings)
@@ -151,9 +157,24 @@ for subkey in range(1):
             #denominator2s += (power_traces[trace][time] - mean_powers[time]) ** 2
 
         denominators = np.sqrt(denominator1s * denominator2s)
-        x=numerators/denominators
+
+        # putting into correlation matrix the correlation coefficients for that subkey/keyguess at every point in time
         correlation_matrix[subkey][keyguess] = numerators / denominators
 
-print (correlation_matrix)
+        # For each keyguess, record its correlation coefficient at the time at which it was most correlated
+        # It doesn't matter that this mixes up the time data because there should only be one keyguess at one point in
+        # time that has a high coefficent for the subkey
+        highest_coefficient[subkey][keyguess] = max(abs(correlation_matrix[subkey][keyguess]))
+
+    # Return the index of the largest value in highest_coefficient, which corresponds to the subkey value
+    full_key[subkey] = np.asscalar(np.argmax(highest_coefficient[subkey]))
+    print ("Got key byte", str(subkey) + ":", hex(full_key[subkey]))
+
+#np.set_printoptions(formatter={'int':hex})
+
+print ("Best guess at full key: ")
+print (full_key)
+for subkey in full_key:
+    print (hex(subkey)[2:], end="")
 
 pass
